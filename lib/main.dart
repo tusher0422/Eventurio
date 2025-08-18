@@ -1,34 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'app/routes/app_pages.dart';
-import 'app/theme/app_theme.dart';
 import 'controllers/theme_controller.dart';
-import 'app/bindings/initial_binding.dart';
+import 'utils/storage_service.dart';
+import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await StorageService().init();
+
+
+  Get.put(ThemeController());
+
   runApp(const EventurioApp());
 }
 
-class EventurioApp extends StatelessWidget{
+class EventurioApp extends StatelessWidget {
   const EventurioApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ThemeController themeController = Get.put(ThemeController());
+    final storage = StorageService();
+    final themeController = Get.find<ThemeController>();
 
-    return Obx(() => GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "Eventurio",
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeController.themeMode.value,
-      initialBinding: InitialBinding(),
-      initialRoute: AppPages.initial,
-      getPages: AppPages.routes,
-    ));
+    return Obx(
+          () => GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Eventurio',
+        theme: themeController.lightTheme,
+        darkTheme: themeController.darkTheme,
+        themeMode: themeController.isDark.value ? ThemeMode.dark : ThemeMode.light,
+        home: storage.hasSeenOnboarding
+            ? const HomeScreen()
+            : const OnboardingScreen(),
+      ),
+    );
   }
-
 }
-
-
-
