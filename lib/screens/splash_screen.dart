@@ -1,28 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../app/routes/app_routes.dart';
+import '../controllers/splash_controller.dart';
+import '../widgets/eventurio_icon.dart';
 
-class SplashScreen extends StatefulWidget{
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
-    State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>{
-  @override
-   void initState(){
-    super.initState();
-    Future.delayed(const Duration(seconds: 1), () {
-      Get.offNamed(AppRoutes.home);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text("Eventurio", style: TextStyle(fontSize: 24)),
+    Get.put(SplashController());
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              EventurioIcon(),
+              SizedBox(height: 20),
+              Text(
+                "Eventurio",
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Discover · Connect · Enjoy",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
