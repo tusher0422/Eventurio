@@ -1,9 +1,9 @@
 import 'package:eventurio/screens/login_screen.dart';
+import 'package:eventurio/screens/home_screen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../screens/home_screen.dart';
 
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
@@ -26,11 +26,12 @@ class AuthController extends GetxController {
       userProfile.clear();
       return;
     }
+
     final doc = await _firestore.collection("users").doc(user.uid).get();
     if (doc.exists) {
       userProfile.assignAll(doc.data()!);
     } else {
-      await _firestore.collection("users").doc(user.uid).set({
+      final newUser = {
         "uid": user.uid,
         "name": user.displayName ?? "",
         "email": user.email ?? "",
@@ -38,14 +39,9 @@ class AuthController extends GetxController {
         "address": "",
         "photoUrl": user.photoURL ?? "",
         "createdAt": FieldValue.serverTimestamp(),
-      });
-      userProfile.assignAll({
-        "name": user.displayName ?? "",
-        "email": user.email ?? "",
-        "phone": "",
-        "address": "",
-        "photoUrl": user.photoURL ?? "",
-      });
+      };
+      await _firestore.collection("users").doc(user.uid).set(newUser);
+      userProfile.assignAll(newUser);
     }
   }
 
@@ -82,6 +78,7 @@ class AuthController extends GetxController {
     }
   }
 
+
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -101,10 +98,12 @@ class AuthController extends GetxController {
     }
   }
 
+
   Future<void> logout() async {
     await _auth.signOut();
     Get.offAll(() => LoginScreen());
   }
+
 
   Future<void> updateProfile({
     required String name,
@@ -113,6 +112,7 @@ class AuthController extends GetxController {
   }) async {
     final user = firebaseUser.value;
     if (user == null) return;
+
     await user.updateDisplayName(name);
     await _firestore.collection("users").doc(user.uid).set({
       "name": name,
@@ -121,6 +121,7 @@ class AuthController extends GetxController {
       "photoUrl": user.photoURL ?? "",
       "email": user.email ?? "",
     }, SetOptions(merge: true));
+
     userProfile["name"] = name;
     userProfile["phone"] = phone;
     userProfile["address"] = address ?? "";
