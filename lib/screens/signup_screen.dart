@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/eventurio_icon.dart';
-import 'login_screen.dart';
+
 
 class SignupScreen extends StatelessWidget {
   SignupScreen({super.key});
@@ -10,8 +10,6 @@ class SignupScreen extends StatelessWidget {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
 
   final AuthController authController = Get.find();
 
@@ -21,75 +19,89 @@ class SignupScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            colors: [Color(0xFF2575FC), Color(0xFF6A11CB)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Card(
-              color: Colors.white,
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const EventurioIcon(size: 80, color: Colors.deepPurple),
-                    const SizedBox(height: 15),
-                    const Text(
-                      "Create Account",
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildTextField(nameController, "Full Name"),
-                    const SizedBox(height: 12),
-                    _buildTextField(emailController, "Email"),
-                    const SizedBox(height: 12),
-                    _buildTextField(passwordController, "Password",
-                        obscure: true),
-                    const SizedBox(height: 12),
-                    _buildTextField(phoneController, "Phone"),
-                    const SizedBox(height: 12),
-                    _buildTextField(addressController, "Address"),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          authController.signUp(
-                            email: emailController.text.trim(),
-                            password: passwordController.text.trim(),
-                            name: nameController.text.trim(),
-                            phone: phoneController.text.trim(),
-                            address: addressController.text.trim(),
-                          );
-                        },
-                        child: const Text("Sign Up"),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const EventurioIcon(size: 120),
+                const SizedBox(height: 20),
+                const Text(
+                  "Create Account",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 30),
+
+                // Name
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Full Name"),
+                ),
+                const SizedBox(height: 12),
+
+                // Email
+                TextField(
+                  controller: emailController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Email"),
+                ),
+                const SizedBox(height: 12),
+
+                // Password
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Password"),
+                ),
+                const SizedBox(height: 20),
+
+                // Signup Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => Get.to(() => LoginScreen()),
-                      child: const Text("Already have an account? Login"),
-                    )
-                  ],
+                    onPressed: () {
+                      authController.signUp(
+                        email: emailController.text.trim(),
+                        password: passwordController.text.trim(),
+                        name: nameController.text.trim(),
+                      );
+                    },
+                    child: const Text("Sign Up"),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                // Go to Login
+                TextButton(
+                  onPressed: () {
+                    Get.back(); // goes back to login
+                  },
+                  child: const Text(
+                    "Already have an account? Login",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -97,19 +109,15 @@ class SignupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(TextEditingController c, String hint,
-      {bool obscure = false}) {
-    return TextField(
-      controller: c,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white70),
+      filled: true,
+      fillColor: Colors.white24,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     );
   }

@@ -18,72 +18,106 @@ class LoginScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF2575FC), Color(0xFF6A11CB)],
+            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Card(
-              color: Colors.white,
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const EventurioIcon(size: 80, color: Colors.deepPurple),
-                    const SizedBox(height: 15),
-                    const Text(
-                      "Welcome Back",
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildTextField(emailController, "Email"),
-                    const SizedBox(height: 12),
-                    _buildTextField(passwordController, "Password",
-                        obscure: true),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          authController.login(
-                            email: emailController.text.trim(),
-                            password: passwordController.text.trim(),
-                          );
-                        },
-                        child: const Text("Login"),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const EventurioIcon(size: 120),
+                const SizedBox(height: 20),
+                const Text(
+                  "Welcome Back",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 30),
+
+                // Email
+                TextField(
+                  controller: emailController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Email"),
+                ),
+                const SizedBox(height: 12),
+
+                // Password
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Password"),
+                ),
+                const SizedBox(height: 20),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: () => authController.signInWithGoogle(),
-                      icon: const Icon(Icons.login),
-                      label: const Text("Sign in with Google"),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => Get.to(() => SignupScreen()),
-                      child: const Text("Don’t have an account? Sign Up"),
-                    )
-                  ],
+                    onPressed: () {
+                      authController.login(
+                        email: emailController.text.trim(),
+                        password: passwordController.text.trim(),
+                      );
+                    },
+                    child: const Text("Login"),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 15),
+
+                // Google Sign-In Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      authController.signInWithGoogle();
+                    },
+                    icon: Image.asset(
+                      'assets/google_logo.png',
+                      height: 24,
+                      width: 24,
+                    ),
+                    label: const Text("Sign in with Google"),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Go to Signup
+                TextButton(
+                  onPressed: () {
+                    Get.to(() => SignupScreen());
+                  },
+                  child: const Text(
+                    "Don’t have an account? Sign Up",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -91,19 +125,15 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(TextEditingController c, String hint,
-      {bool obscure = false}) {
-    return TextField(
-      controller: c,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white70),
+      filled: true,
+      fillColor: Colors.white24,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     );
   }

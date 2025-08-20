@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../utils/storage_service.dart';
-import 'home_screen.dart';
+import 'login_screen.dart';
 
 class OnboardingScreen extends StatelessWidget{
   const OnboardingScreen({super.key});
@@ -14,7 +14,7 @@ class OnboardingScreen extends StatelessWidget{
             onPressed: (){
               StorageService().setHasSeenOnboarding(true);
 
-              Get.offAll(() => const HomeScreen());
+              Get.offAll(() => LoginScreen());
             },
         child: const Text("Finish Onboarding"),
         ),

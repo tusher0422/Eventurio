@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// Uncomment in Phase 2 (Profile persistence)
+// Phase 2 (Profile persistence with Firestore)
 // import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../screens/home_screen.dart';
@@ -14,15 +14,16 @@ class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Rxn<User> firebaseUser = Rxn<User>();
 
-  // Phase 2: Firestore instance
+  // Phase 2
   // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void onInit() {
     super.onInit();
-    firebaseUser.bindStream(_auth.userChanges()); // reactive user
+    firebaseUser.bindStream(_auth.userChanges()); // reactive user tracking
   }
 
+  /// ----------------- SIGN UP -----------------
   Future<void> signUp({
     required String email,
     required String password,
@@ -36,9 +37,10 @@ class AuthController extends GetxController {
         password: password,
       );
 
+      // Update display name
       await cred.user?.updateDisplayName(name);
 
-      // 🔽 Phase 2: Save extra info to Firestore
+      // 🔽 Phase 2: Store extra profile data
       // if (cred.user != null) {
       //   await _firestore.collection("users").doc(cred.user!.uid).set({
       //     "uid": cred.user!.uid,
@@ -53,11 +55,13 @@ class AuthController extends GetxController {
 
       Get.offAll(() => const HomeScreen());
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Signup Error", e.message ?? "Unknown error",
-          snackPosition: SnackPosition.BOTTOM);
+      _showError("Signup Error", e.message);
+    } catch (e) {
+      _showError("Signup Error", e.toString());
     }
   }
 
+  /// ----------------- LOGIN -----------------
   Future<void> login({
     required String email,
     required String password,
@@ -66,19 +70,19 @@ class AuthController extends GetxController {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       Get.offAll(() => const HomeScreen());
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Login Error", e.message ?? "Unknown error",
-          snackPosition: SnackPosition.BOTTOM);
+      _showError("Login Error", e.message);
+    } catch (e) {
+      _showError("Login Error", e.toString());
     }
   }
 
+  /// ----------------- GOOGLE SIGN IN -----------------
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) return; // cancelled
 
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
-
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -86,7 +90,7 @@ class AuthController extends GetxController {
 
       final cred = await _auth.signInWithCredential(credential);
 
-      // 🔽 Phase 2: Create or update Firestore profile
+      // 🔽 Phase 2: Save profile
       // if (cred.user != null) {
       //   await _firestore.collection("users").doc(cred.user!.uid).set({
       //     "uid": cred.user!.uid,
@@ -100,14 +104,34 @@ class AuthController extends GetxController {
       // }
 
       Get.offAll(() => const HomeScreen());
+    } on FirebaseAuthException catch (e) {
+      _showError("Google Sign-In Error", e.message);
     } catch (e) {
-      Get.snackbar("Google Sign-In Error", e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+      _showError("Google Sign-In Error", e.toString());
     }
   }
 
+  /// ----------------- LOGOUT -----------------
   Future<void> logout() async {
-    await _auth.signOut();
-    Get.offAll(() => LoginScreen());
+    try {
+      await _auth.signOut();
+      await GoogleSignIn().signOut();
+      Get.offAll(() => LoginScreen());
+    } catch (e) {
+      _showError("Logout Error", e.toString());
+    }
+  }
+
+  /// ----------------- ERROR HANDLER -----------------
+  void _showError(String title, String? message) {
+    Get.snackbar(
+      title,
+      message ?? "Something went wrong",
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.redAccent,
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(10),
+      borderRadius: 10,
+    );
   }
 }
