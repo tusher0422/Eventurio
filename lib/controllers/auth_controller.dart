@@ -1,67 +1,75 @@
-import 'package:flutter/material.dart';
+import 'package:eventurio/screens/login_screen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// Phase 2 (Profile persistence with Firestore)
-// import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../screens/home_screen.dart';
-import '../screens/login_screen.dart';
 
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final Rxn<User> firebaseUser = Rxn<User>();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Phase 2
-  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Rxn<User> firebaseUser = Rxn<User>();
+  final RxMap<String, dynamic> userProfile = <String, dynamic>{}.obs;
 
   @override
   void onInit() {
     super.onInit();
-    firebaseUser.bindStream(_auth.userChanges()); // reactive user tracking
+    firebaseUser.bindStream(_auth.userChanges());
+    ever(firebaseUser, _loadUserProfile);
   }
 
-  /// ----------------- SIGN UP -----------------
+  Future<void> _loadUserProfile(User? user) async {
+    if (user == null) {
+      userProfile.clear();
+      return;
+    }
+    final doc = await _firestore.collection("users").doc(user.uid).get();
+    if (doc.exists) {
+      userProfile.assignAll(doc.data()!);
+    } else {
+      await _firestore.collection("users").doc(user.uid).set({
+        "uid": user.uid,
+        "name": user.displayName ?? "",
+        "email": user.email ?? "",
+        "phone": "",
+        "address": "",
+        "photoUrl": user.photoURL ?? "",
+        "createdAt": FieldValue.serverTimestamp(),
+      });
+      userProfile.assignAll({
+        "name": user.displayName ?? "",
+        "email": user.email ?? "",
+        "phone": "",
+        "address": "",
+        "photoUrl": user.photoURL ?? "",
+      });
+    }
+  }
+
+  String get userName => userProfile["name"] ?? firebaseUser.value?.displayName ?? "";
+  String get userEmail => userProfile["email"] ?? firebaseUser.value?.email ?? "";
+  String get userPhoto => userProfile["photoUrl"] ?? firebaseUser.value?.photoURL ?? "";
+  String get userPhone => userProfile["phone"] ?? "";
+  String get userAddress => userProfile["address"] ?? "";
+
   Future<void> signUp({
     required String email,
     required String password,
     required String name,
-    String? phone,
-    String? address,
   }) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Update display name
+      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       await cred.user?.updateDisplayName(name);
-
-      // 🔽 Phase 2: Store extra profile data
-      // if (cred.user != null) {
-      //   await _firestore.collection("users").doc(cred.user!.uid).set({
-      //     "uid": cred.user!.uid,
-      //     "name": name,
-      //     "email": email,
-      //     "phone": phone ?? "",
-      //     "address": address ?? "",
-      //     "photoUrl": cred.user!.photoURL ?? "",
-      //     "createdAt": FieldValue.serverTimestamp(),
-      //   });
-      // }
-
+      await _loadUserProfile(cred.user);
       Get.offAll(() => const HomeScreen());
     } on FirebaseAuthException catch (e) {
-      _showError("Signup Error", e.message);
-    } catch (e) {
-      _showError("Signup Error", e.toString());
+      Get.snackbar("Signup Error", e.message ?? "Unknown error", snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  /// ----------------- LOGIN -----------------
   Future<void> login({
     required String email,
     required String password,
@@ -70,68 +78,51 @@ class AuthController extends GetxController {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       Get.offAll(() => const HomeScreen());
     } on FirebaseAuthException catch (e) {
-      _showError("Login Error", e.message);
-    } catch (e) {
-      _showError("Login Error", e.toString());
+      Get.snackbar("Login Error", e.message ?? "Unknown error", snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  /// ----------------- GOOGLE SIGN IN -----------------
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // cancelled
+      if (googleUser == null) return;
 
-      final googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final cred = await _auth.signInWithCredential(credential);
-
-      // 🔽 Phase 2: Save profile
-      // if (cred.user != null) {
-      //   await _firestore.collection("users").doc(cred.user!.uid).set({
-      //     "uid": cred.user!.uid,
-      //     "name": cred.user!.displayName ?? "",
-      //     "email": cred.user!.email ?? "",
-      //     "phone": "",
-      //     "address": "",
-      //     "photoUrl": cred.user!.photoURL ?? "",
-      //     "createdAt": FieldValue.serverTimestamp(),
-      //   }, SetOptions(merge: true));
-      // }
-
+      final userCredential = await _auth.signInWithCredential(credential);
+      await _loadUserProfile(userCredential.user);
       Get.offAll(() => const HomeScreen());
-    } on FirebaseAuthException catch (e) {
-      _showError("Google Sign-In Error", e.message);
     } catch (e) {
-      _showError("Google Sign-In Error", e.toString());
+      Get.snackbar("Google Sign-In Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  /// ----------------- LOGOUT -----------------
   Future<void> logout() async {
-    try {
-      await _auth.signOut();
-      await GoogleSignIn().signOut();
-      Get.offAll(() => LoginScreen());
-    } catch (e) {
-      _showError("Logout Error", e.toString());
-    }
+    await _auth.signOut();
+    Get.offAll(() => LoginScreen());
   }
 
-  /// ----------------- ERROR HANDLER -----------------
-  void _showError(String title, String? message) {
-    Get.snackbar(
-      title,
-      message ?? "Something went wrong",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.redAccent,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(10),
-      borderRadius: 10,
-    );
+  Future<void> updateProfile({
+    required String name,
+    required String phone,
+    String? address,
+  }) async {
+    final user = firebaseUser.value;
+    if (user == null) return;
+    await user.updateDisplayName(name);
+    await _firestore.collection("users").doc(user.uid).set({
+      "name": name,
+      "phone": phone,
+      "address": address ?? "",
+      "photoUrl": user.photoURL ?? "",
+      "email": user.email ?? "",
+    }, SetOptions(merge: true));
+    userProfile["name"] = name;
+    userProfile["phone"] = phone;
+    userProfile["address"] = address ?? "";
   }
 }
