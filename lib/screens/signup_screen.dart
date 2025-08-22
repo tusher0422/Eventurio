@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/eventurio_icon.dart';
-import 'login_screen.dart';
+import '../app/routes/app_routes.dart';
 
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends GetView<AuthController> {
   SignupScreen({super.key});
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final AuthController authController = AuthController.to;
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +33,10 @@ class SignupScreen extends StatelessWidget {
                 const Text(
                   "Create Account",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 30),
                 TextField(
@@ -61,14 +61,9 @@ class SignupScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
+                    style: _buttonStyle(),
                     onPressed: () {
-                      authController.signUp(
+                      controller.signUp(
                         name: nameController.text.trim(),
                         email: emailController.text.trim(),
                         password: passwordController.text.trim(),
@@ -79,14 +74,12 @@ class SignupScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 TextButton(
-                  onPressed: () {
-                    Get.to(() => LoginScreen());
-                  },
+                  onPressed: () => Get.toNamed(Routes.login),
                   child: const Text(
                     "Already have an account? Login",
                     style: TextStyle(color: Colors.white70),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -95,16 +88,21 @@ class SignupScreen extends StatelessWidget {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white70),
-      filled: true,
-      fillColor: Colors.white24,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: Colors.white70),
+    filled: true,
+    fillColor: Colors.white24,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+  );
+
+  ButtonStyle _buttonStyle() => ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.deepPurple,
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
 }

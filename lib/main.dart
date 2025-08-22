@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'utils/storage_service.dart';
-import 'screens/splash_screen.dart';
+import 'app/routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,10 +29,10 @@ class EventurioApp extends StatelessWidget {
       title: 'Eventurio',
       theme: themeController.lightTheme,
       darkTheme: themeController.darkTheme,
-      themeMode: themeController.isDark.value
-          ? ThemeMode.dark
-          : ThemeMode.light,
-      home: const SplashScreen(),
+      themeMode:
+      themeController.isDark.value ? ThemeMode.dark : ThemeMode.light,
+      initialRoute: AppPages.initial,
+      getPages: AppPages.pages,
     ));
   }
 }

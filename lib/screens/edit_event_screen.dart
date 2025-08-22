@@ -1,19 +1,19 @@
 import 'package:eventurio/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../controllers/event_controller.dart';
 import '../models/event_model.dart';
 
-class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+class EditEventScreen extends StatefulWidget {
+  const EditEventScreen({super.key});
 
   @override
-  State<CreateEventScreen> createState() => _CreateEventScreenState();
+  State<EditEventScreen> createState() => _EditEventScreenState();
 }
 
-class _CreateEventScreenState extends State<CreateEventScreen> {
+class _EditEventScreenState extends State<EditEventScreen> {
   final _formKey = GlobalKey<FormState>();
+  late Event event;
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _locationController = TextEditingController();
@@ -24,10 +24,25 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   final eventController = Get.find<EventController>();
 
+  @override
+  void initState() {
+    super.initState();
+    final eventId = Get.parameters['id'];
+    event = eventController.events.firstWhere((e) => e.id == eventId);
+
+    _titleController.text = event.title;
+    _descController.text = event.description;
+    _locationController.text = event.location;
+    _category = event.category;
+    _isPaid = event.isPaid;
+    _price = event.price;
+    _selectedDate = event.date;
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
@@ -39,31 +54,24 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _selectedDate == null) return;
 
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
-
-    final event = Event(
-      id: "",
+    final updated = event.copyWith(
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       category: _category,
       isPaid: _isPaid,
-      date: _selectedDate!,
+      price: _isPaid ? _price : null,
+      date: _selectedDate,
       location: _locationController.text.trim(),
-      createdBy: userId,
-      attendees: [],
-      price: _isPaid ? _price ?? 0.0 : null,
-      createdAt: DateTime.now(),
     );
 
-    await eventController.createEvent(event);
+    await eventController.updateEvent(updated);
     Get.back();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Event")),
+      appBar: AppBar(title: const Text("Edit Event")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -107,6 +115,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
               if (_isPaid)
                 TextFormField(
+                  initialValue: _price?.toString(),
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: "Price"),
                   onChanged: (val) => _price = double.tryParse(val),
@@ -133,7 +142,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   await _submit();
                   Get.toNamed(Routes.home);
                 },
-                child: const Text("Create Event"),
+                child: const Text("Update Event"),
               ),
             ],
           ),

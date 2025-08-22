@@ -3,27 +3,26 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/theme_controller.dart';
-import 'profile_screen.dart';
+import '../controllers/event_controller.dart';
+import '../widgets/drawer_header_widget.dart';
+import '../widgets/event_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authController = AuthController.to;
+    final authController = Get.find<AuthController>();
     final themeController = Get.find<ThemeController>();
+    final eventController = Get.put(EventController());
     final user = FirebaseAuth.instance.currentUser;
+    final drawerKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: drawerKey,
       appBar: AppBar(
         title: const Text("Eventurio Home"),
         backgroundColor: Colors.deepPurple,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-          ),
-        ),
         actions: [
           IconButton(
             icon: CircleAvatar(
@@ -33,56 +32,18 @@ class HomeScreen extends StatelessWidget {
                   ? const Icon(Icons.person)
                   : null,
             ),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-          )
+            onPressed: () => drawerKey.currentState?.openEndDrawer(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => drawerKey.currentState?.openEndDrawer(),
+          ),
         ],
       ),
       endDrawer: Drawer(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF2575FC), Color(0xFF6A11CB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : null,
-                    child: user?.photoURL == null
-                        ? const Icon(Icons.person, size: 40)
-                        : null,
-                  ),
-                  const SizedBox(height: 10),
-                  Obx(() => Text(
-                    authController.userName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  )),
-                  const SizedBox(height: 5),
-                  Obx(() => Text(
-                    authController.userEmail,
-                    style: const TextStyle(color: Colors.white70),
-                  )),
-                  const SizedBox(height: 10),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.white),
-                    onPressed: () => Get.to(() => ProfileScreen()),
-                  )
-                ],
-              ),
-            ),
+            DrawerHeaderWidget(),
             ListTile(
               leading: const Icon(Icons.brightness_6),
               title: const Text("Theme"),
@@ -94,7 +55,18 @@ class HomeScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.event),
               title: const Text("My Events"),
-              onTap: () {},
+              onTap: () async {
+                Navigator.pop(context); // close drawer
+                await eventController.fetchMyEvents();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.refresh),
+              title: const Text("All Events"),
+              onTap: () async {
+                Navigator.pop(context);
+                await eventController.fetchEvents();
+              },
             ),
             ListTile(
               leading: const Icon(Icons.logout),
@@ -104,17 +76,45 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              "Eventurio Features Coming Soon!",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      body: Obx(() {
+        if (eventController.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (eventController.events.isEmpty) {
+          return const Center(
+            child: Text(
+              "No events yet. Create the first one!",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => eventController.fetchEvents(),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            itemCount: eventController.events.length,
+            itemBuilder: (context, index) {
+              final event = eventController.events[index];
+              return EventCard(event: event);
+            },
+          ),
+        );
+      }),
+      floatingActionButton: Obx(() {
+        if (eventController.isAdmin() ||
+            authController.firebaseUser.value != null) {
+          return FloatingActionButton(
+            backgroundColor: Colors.deepPurple,
+            child: const Icon(Icons.add),
+            onPressed: () {
+              Get.toNamed("/event/create");
+            },
+          );
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 }

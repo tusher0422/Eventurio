@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/eventurio_icon.dart';
-import 'signup_screen.dart';
+import '../app/routes/app_routes.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends GetView<AuthController> {
   LoginScreen({super.key});
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final AuthController authController = AuthController.to;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +32,10 @@ class LoginScreen extends StatelessWidget {
                 const Text(
                   "Welcome Back",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 30),
                 TextField(
@@ -54,14 +54,9 @@ class LoginScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
+                    style: _buttonStyle(),
                     onPressed: () {
-                      authController.login(
+                      controller.login(
                         email: emailController.text.trim(),
                         password: passwordController.text.trim(),
                       );
@@ -73,36 +68,24 @@ class LoginScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      authController.signInWithGoogle();
-                    },
+                    style: _googleButtonStyle(),
+                    onPressed: () => controller.signInWithGoogle(),
                     label: const Text("Sign in with Google"),
                     icon: Image.asset(
                       'assets/google_logo.png',
                       height: 24,
                       width: 24,
                     ),
-
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
-                  onPressed: () {
-                    Get.to(() => SignupScreen());
-                  },
+                  onPressed: () => Get.toNamed(Routes.signup),
                   child: const Text(
                     "Don’t have an account? Sign Up",
                     style: TextStyle(color: Colors.white70),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -111,16 +94,28 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white70),
-      filled: true,
-      fillColor: Colors.white24,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: Colors.white70),
+    filled: true,
+    fillColor: Colors.white24,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+  );
+
+  ButtonStyle _buttonStyle() => ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.deepPurple,
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
+
+  ButtonStyle _googleButtonStyle() => ElevatedButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.black87,
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
 }

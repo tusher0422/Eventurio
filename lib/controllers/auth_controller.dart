@@ -1,13 +1,10 @@
-import 'package:eventurio/screens/login_screen.dart';
-import 'package:eventurio/screens/home_screen.dart';
+import 'package:eventurio/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthController extends GetxController {
-  static AuthController get to => Get.find();
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -45,9 +42,12 @@ class AuthController extends GetxController {
     }
   }
 
-  String get userName => userProfile["name"] ?? firebaseUser.value?.displayName ?? "";
-  String get userEmail => userProfile["email"] ?? firebaseUser.value?.email ?? "";
-  String get userPhoto => userProfile["photoUrl"] ?? firebaseUser.value?.photoURL ?? "";
+  String get userName =>
+      userProfile["name"] ?? firebaseUser.value?.displayName ?? "";
+  String get userEmail =>
+      userProfile["email"] ?? firebaseUser.value?.email ?? "";
+  String get userPhoto =>
+      userProfile["photoUrl"] ?? firebaseUser.value?.photoURL ?? "";
   String get userPhone => userProfile["phone"] ?? "";
   String get userAddress => userProfile["address"] ?? "";
 
@@ -57,12 +57,14 @@ class AuthController extends GetxController {
     required String name,
   }) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      final cred = await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
       await cred.user?.updateDisplayName(name);
       await _loadUserProfile(cred.user);
-      Get.offAll(() => const HomeScreen());
+      Get.offAllNamed(Routes.home);
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Signup Error", e.message ?? "Unknown error", snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Signup Error", e.message ?? "Unknown error",
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -71,39 +73,42 @@ class AuthController extends GetxController {
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      Get.offAll(() => const HomeScreen());
+      await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      Get.offAllNamed(Routes.home);
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Login Error", e.message ?? "Unknown error", snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Login Error", e.message ?? "Unknown error",
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-
   Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser =
+      await GoogleSignIn().signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential =
+      await _auth.signInWithCredential(credential);
       await _loadUserProfile(userCredential.user);
-      Get.offAll(() => const HomeScreen());
+      Get.offAllNamed(Routes.home);
     } catch (e) {
-      Get.snackbar("Google Sign-In Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Google Sign-In Error", e.toString(),
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-
   Future<void> logout() async {
     await _auth.signOut();
-    Get.offAll(() => LoginScreen());
+    Get.offAllNamed(Routes.login);
   }
-
 
   Future<void> updateProfile({
     required String name,

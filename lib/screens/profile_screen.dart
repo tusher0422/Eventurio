@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends GetView<AuthController> {
   ProfileScreen({super.key});
-
-  final AuthController authController = AuthController.to;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -13,9 +11,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    nameController.text = authController.userName;
-    phoneController.text = authController.userPhone;
-    addressController.text = authController.userAddress;
+    nameController.text = controller.userName;
+    phoneController.text = controller.userPhone;
+    addressController.text = controller.userAddress;
 
     return Scaffold(
       appBar: AppBar(
@@ -28,10 +26,10 @@ class ProfileScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundImage: authController.userPhoto.isNotEmpty
-                  ? NetworkImage(authController.userPhoto)
+              backgroundImage: controller.userPhoto.isNotEmpty
+                  ? NetworkImage(controller.userPhoto)
                   : null,
-              child: authController.userPhoto.isEmpty
+              child: controller.userPhoto.isEmpty
                   ? const Icon(Icons.person, size: 50)
                   : null,
             ),
@@ -56,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  await authController.updateProfile(
+                  await controller.updateProfile(
                     name: nameController.text.trim(),
                     phone: phoneController.text.trim(),
                     address: addressController.text.trim(),
